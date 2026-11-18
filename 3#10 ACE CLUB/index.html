@@ -1,0 +1,929 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+    <title>ACE CLUB & BACCARAT</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome 6 (Free) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* ==================== ACE CLUB 基础变量与样式 ==================== */
+        :root {
+            --bg-dark: #07090c;
+            --bg-panel: #0d1117;
+            --bg-card: #141b26;
+            --border-color: #1e2d42;
+            --accent-cyan: #26a8d6;
+            --accent-glow: rgba(38, 168, 214, 0.25);
+        }
+
+        html, body {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+            position: fixed;
+            background-color: #000000; 
+            color: #e6edf3; 
+            -webkit-tap-highlight-color: transparent; 
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        }
+        ::-webkit-scrollbar { display: none; }
+        
+        .page-content { display: none; }
+        .page-content.active { display: block; }
+        
+        .top-bar { background: linear-gradient(to bottom, rgba(7,9,12,0.95) 0%, rgba(7,9,12,0) 100%); }
+        .top-bar-solid { background-color: rgba(13, 17, 23, 0.92); backdrop-filter: blur(12px); border-bottom: 1px solid var(--border-color); }
+
+        .carousel-indicator.active { background-color: var(--accent-cyan); width: 1.25rem; box-shadow: 0 0 8px var(--accent-cyan); }
+        .nav-item.active { color: var(--accent-cyan); text-shadow: 0 0 10px var(--accent-glow); }
+
+        .game-nav-item { position: relative; border-left: 3px solid transparent; transition: all 0.2s; }
+        .game-nav-item.active { background-color: var(--bg-card); border-left-color: var(--accent-cyan); color: var(--accent-cyan); font-weight: bold; }
+
+        .luxury-card { background: linear-gradient(145deg, #131a27 0%, #0d121a 100%); border: 1px solid rgba(255, 255, 255, 0.08); border-radius: 18px; box-shadow: 0 8px 20px rgba(0, 0, 0, 0.4); }
+        .wallet-card { background: linear-gradient(135deg, #172c47 0%, #0d1522 100%); border: 1px solid rgba(38, 168, 214, 0.35); box-shadow: 0 8px 24px rgba(13, 20, 32, 0.7); border-radius: 20px; }
+        .game-tile { background: linear-gradient(160deg, #162030 0%, #0e1420 100%); border: 1px solid #1f2f45; border-radius: 16px; box-shadow: inset 0 1px 1px rgba(255,255,255,0.1), 0 4px 12px rgba(0,0,0,0.3); }
+
+        /* ==================== 百家乐独立样式区 ==================== */
+        .baccarat-layer {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: #090c12;
+            z-index: 9999;
+            display: flex; flex-direction: column; overflow: hidden;
+            transform: translateY(100%);
+            transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+            /* 百家乐变量 */
+            --bac-bg-main: #090c12;
+            --bac-ace-cyan: #2eb4e6;
+            --bac-ace-cyan-glow: rgba(46, 180, 230, 0.4);
+            --bac-banker-red: #d9383a;
+            --bac-player-blue: #2a72d7;
+            --bac-tie-green: #27ae60;
+            --bac-font-mono: SFMono-Regular, Consolas, "Liberation Mono", Menlo, monospace;
+        }
+        .baccarat-layer.show { transform: translateY(0); }
+
+        .bac-top-app-bar { height: 48px; background: #0f131c; display: flex; align-items: center; justify-content: space-between; padding: 0 16px; border-bottom: 1px solid #1a2232; flex-shrink: 0; }
+        
+        .bac-brand-tag { 
+            color: var(--bac-ace-cyan); 
+            display: flex; align-items: center; gap: 6px; 
+        }
+        .bac-brand-dot { width: 8px; height: 8px; background: var(--bac-ace-cyan); border-radius: 50%; box-shadow: 0 0 8px var(--bac-ace-cyan); }
+        
+        .bac-user-balance-box { background: rgba(255,255,255,0.05); padding: 4px 12px; border-radius: 20px; border: 1px solid rgba(46, 180, 230, 0.3); display: flex; align-items: center; gap: 6px; }
+        .bac-balance-val { font-size: 14px; font-weight: 700; color: var(--bac-ace-cyan); font-family: var(--bac-font-mono); }
+        .bac-currency { font-size: 10px; color: #8fa0b5; }
+
+        .bac-game-viewport { height: 38%; background: radial-gradient(circle at center 30%, #112d1f 0%, #06110b 100%); position: relative; display: flex; flex-direction: column; justify-content: space-between; padding: 10px 12px; border-bottom: 1px solid #1f2b20; flex-shrink: 0; }
+        .bac-viewport-header { display: flex; justify-content: space-between; align-items: center; font-size: 11px; color: rgba(255,255,255,0.7); font-weight: 600; z-index: 2; }
+        .bac-live-badge { background: rgba(39, 174, 96, 0.2); border: 1px solid var(--bac-tie-green); color: #69f0ae; font-size: 9px; padding: 2px 6px; border-radius: 4px; display: flex; align-items: center; gap: 4px; }
+        .bac-live-dot { width: 5px; height: 5px; background: #69f0ae; border-radius: 50%; animation: bac-pulse 1s infinite; }
+        @keyframes bac-pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.3; } }
+
+        .bac-table-ring { position: absolute; top: 12%; left: 5%; right: 5%; bottom: 12%; border: 2px solid rgba(46, 180, 230, 0.2); border-radius: 120px / 60px; pointer-events: none; display: flex; align-items: center; justify-content: center; }
+        .bac-table-watermark { color: rgba(46, 180, 230, 0.1); font-size: 13px; font-weight: 900; letter-spacing: 3px; }
+
+        .bac-timer-circle { position: absolute; right: 14px; bottom: 14px; width: 54px; height: 54px; border-radius: 50%; background: rgba(0,0,0,0.75); border: 2px solid var(--bac-ace-cyan); box-shadow: 0 0 12px var(--bac-ace-cyan-glow); display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 5; }
+        .bac-timer-num { font-size: 18px; font-weight: 900; color: #fff; font-family: var(--bac-font-mono); line-height: 1; }
+        .bac-timer-lbl { font-size: 7px; color: var(--bac-ace-cyan); margin-top: 2px; transform: scale(0.9); }
+
+        .bac-cards-display { display: flex; justify-content: space-between; align-items: center; padding: 0 10px; z-index: 3; margin-top: 10px; }
+        .bac-side-box { display: flex; flex-direction: column; align-items: center; gap: 6px; width: 42%; }
+        .bac-side-name { font-size: 12px; font-weight: 900; letter-spacing: 1px; }
+        .bac-p-color { color: #58a6ff; } .bac-b-color { color: #ff7b72; }
+        
+        .bac-card-slot { display: flex; gap: 4px; height: 56px; justify-content: center; }
+        .bac-poker-card { width: 38px; height: 56px; background: #fff; border-radius: 4px; box-shadow: 0 4px 10px rgba(0,0,0,0.6); display: flex; flex-direction: column; justify-content: center; align-items: center; font-size: 18px; font-weight: bold; transform: translateY(-10px); opacity: 0; transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .bac-poker-card.active { transform: translateY(0); opacity: 1; }
+        .bac-card-red { color: #d32f2f; } .bac-card-black { color: #111; }
+        .bac-score-badge { font-size: 18px; font-weight: 900; color: #fff; font-family: var(--bac-font-mono); opacity: 0; transition: opacity 0.3s; background: rgba(0,0,0,0.6); padding: 0 8px; border-radius: 10px; }
+
+        .bac-status-toast { position: absolute; top: 45%; left: 50%; transform: translate(-50%, -50%); background: rgba(10, 14, 23, 0.92); border: 1px solid var(--bac-ace-cyan); color: var(--bac-ace-cyan); padding: 8px 20px; border-radius: 20px; font-weight: bold; font-size: 13px; letter-spacing: 1.5px; z-index: 10; opacity: 0; transition: opacity 0.3s; pointer-events: none; box-shadow: 0 4px 20px rgba(0,0,0,0.8); text-align: center; white-space: nowrap; }
+
+        .bac-roadmap-container { height: 78px; background: #0c1017; border-top: 1px solid #1a2232; border-bottom: 1px solid #1a2232; overflow-x: auto; display: flex; flex-shrink: 0; }
+        .bac-roadmap-grid { display: grid; grid-template-rows: repeat(6, 12px); grid-auto-flow: column; grid-auto-columns: 12px; gap: 1px; padding: 1px; background: #161d2b; }
+        .bac-road-cell { background: #0c1017; display: flex; align-items: center; justify-content: center; }
+        .bac-bead { width: 10px; height: 10px; border-radius: 50%; font-size: 7px; color: #fff; font-weight: bold; display: flex; align-items: center; justify-content: center; transform: scale(0.9); }
+        .bac-bead-B { background: var(--bac-banker-red); } .bac-bead-P { background: var(--bac-player-blue); } .bac-bead-T { background: var(--bac-tie-green); }
+
+        .bac-bet-board { flex: 1; background: #0f141d; padding: 8px; display: grid; grid-template-columns: 1fr 1.1fr 1fr; grid-template-rows: 1fr 1fr; gap: 6px; flex-shrink: 0; }
+        .bac-bet-zone { background: #151b26; border: 1px solid #222c3d; border-radius: 6px; display: flex; flex-direction: column; align-items: center; justify-content: center; position: relative; transition: all 0.15s; }
+        .bac-bet-zone:active { background: #1c2433; transform: scale(0.98); }
+        .bac-bet-zone.winner { animation: bac-borderGlow 0.8s infinite alternate; }
+        @keyframes bac-borderGlow { 0% { border-color: var(--bac-ace-cyan); box-shadow: inset 0 0 10px rgba(46, 180, 230, 0.2); } 100% { border-color: var(--bac-ace-cyan); box-shadow: inset 0 0 20px rgba(46, 180, 230, 0.6); } }
+        .bac-z-title { font-size: 13px; font-weight: 900; letter-spacing: 1px; }
+        .bac-z-odds { font-size: 9px; color: #6b7c93; font-family: var(--bac-font-mono); margin-top: 2px; }
+
+        .bac-zone-P { border-top: 3px solid var(--bac-player-blue); } .bac-zone-P .bac-z-title { color: #58a6ff; }
+        .bac-zone-B { border-top: 3px solid var(--bac-banker-red); } .bac-zone-B .bac-z-title { color: #ff7b72; }
+        .bac-zone-T { grid-column: 2 / 3; grid-row: 1 / 3; border: 1px solid var(--bac-tie-green); background: rgba(39, 174, 96, 0.03); } .bac-zone-T .bac-z-title { color: #69f0ae; font-size: 15px; }
+        .bac-zone-PP { border-left: 2px solid var(--bac-player-blue); } .bac-zone-PP .bac-z-title { font-size: 11px; color: #a5d6ff; }
+        .bac-zone-BP { border-right: 2px solid var(--bac-banker-red); } .bac-zone-BP .bac-z-title { font-size: 11px; color: #ffadad; }
+
+        .bac-chip-on-board { position: absolute; bottom: 6px; width: 28px; height: 28px; background: radial-gradient(circle, #54c9f7 0%, #1b85ad 100%); border: 2px dashed #000; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 9px; font-weight: 900; color: #000; font-family: var(--bac-font-mono); box-shadow: 0 4px 8px rgba(0,0,0,0.8); transform: scale(0); transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275); pointer-events: none; }
+        .bac-chip-on-board.show { transform: scale(1); }
+
+        .bac-controls-bar { background: #090c12; padding: 8px 12px 12px 12px; border-top: 1px solid #1a2232; display: flex; flex-direction: column; gap: 8px; flex-shrink: 0; }
+        .bac-chips-row { display: flex; justify-content: space-between; align-items: center; padding: 2px 0; }
+        .bac-chip-item { width: 40px; height: 40px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 11px; font-weight: 900; color: #fff; font-family: var(--bac-font-mono); border: 2px dashed rgba(255,255,255,0.3); box-shadow: 0 4px 6px rgba(0,0,0,0.4); cursor: pointer; transition: all 0.2s; }
+        .bac-chip-item.active { transform: translateY(-6px); border-color: #fff; border-style: solid; box-shadow: 0 6px 12px var(--bac-ace-cyan-glow); }
+        .bac-cp-10 { background: #1e6091; } .bac-cp-50 { background: #d97706; } .bac-cp-100 { background: #b91c1c; } .bac-cp-500 { background: #047857; } .bac-cp-all { background: #374151; font-size: 9px; }
+
+        .bac-action-row { display: flex; gap: 8px; }
+        .bac-act-btn { flex: 1; padding: 10px; border-radius: 6px; font-weight: bold; font-size: 13px; border: none; transition: opacity 0.2s; cursor: pointer;}
+        .bac-act-btn:active { opacity: 0.7; }
+        .bac-btn-reset { background: #1c2433; color: #8fa0b5; }
+        .bac-btn-confirm { background: linear-gradient(180deg, #2eb4e6 0%, #1b85ad 100%); color: #000; font-weight: 900; }
+        .bac-act-btn:disabled { opacity: 0.3; pointer-events: none; }
+    </style>
+</head>
+<body class="antialiased bg-[#000000]">
+
+    <!-- 修复：移除所有固定宽度限制，改为绝对满屏适配 (w-full h-full absolute inset-0) -->
+    <div class="absolute inset-0 bg-[#07090c] flex flex-col overflow-hidden">
+
+        <!-- ==================== ACE CLUB 主程序 ==================== -->
+        
+        <!-- 全局顶部栏 (修复：移除根据滚动显隐的逻辑，保证所有页面统一显示顶栏) -->
+        <header id="globalTopBar" class="absolute top-0 left-0 right-0 h-14 flex items-center justify-between px-3 top-bar-solid transition-all duration-300 z-50">
+            <div class="text-[#26a8d6] font-extrabold text-base tracking-wider flex-shrink-0">ACE CLUB</div>
+            <div class="flex-1 mx-2.5 bg-[#0d1117]/80 backdrop-blur-md rounded-full h-8 flex items-center px-2.5 border border-[#1e2d42]">
+                <i class="fa-solid fa-magnifying-glass text-gray-400 mr-1.5 text-xs"></i>
+                <input type="text" placeholder="搜索游戏、百家乐..." class="bg-transparent text-xs text-white w-full outline-none placeholder-gray-400">
+            </div>
+            <div class="flex items-center space-x-2.5 text-gray-300 flex-shrink-0">
+                <i class="fa-solid fa-headset text-lg cursor-pointer hover:text-cyan-400 transition-colors" onclick="switchPage('tutorial', document.querySelectorAll('.nav-item')[3])"></i>
+                <div class="relative">
+                    <i class="fa-regular fa-bell text-lg"></i>
+                    <span class="absolute -top-1 -right-1 bg-cyan-400 rounded-full w-2 h-2 shadow-[0_0_6px_#26a8d6]"></span>
+                </div>
+            </div>
+        </header>
+
+        <!-- 页面主体容器 -->
+        <main class="w-full pt-14 pb-[65px] flex-1 overflow-y-auto h-full" id="mainContainer">
+            
+            <!-- 首页 -->
+            <div id="page-home" class="page-content active">
+                <div class="relative w-full aspect-[2.1/1] bg-[#0d1117] overflow-hidden border-b border-[#1e2d42] cursor-pointer" onclick="switchPage('promotions', document.querySelectorAll('.nav-item')[2])">
+                    <div id="carouselTrack" class="flex h-full transition-transform duration-500 ease-in-out" style="width: 400%; transform: translateX(0%);">
+                        <div class="w-1/4 h-full flex items-center justify-center bg-[#0d1117] flex-shrink-0"><img src="https://cdn.phototourl.com/anon/2026-11-15-683170e7-b6fd-45ed-8f54-1ad4531d1aad.jpg" class="w-full h-full object-contain"></div>
+                        <div class="w-1/4 h-full flex items-center justify-center bg-[#0d1117] flex-shrink-0"><img src="https://cdn.phototourl.com/anon/2026-11-15-3ec4fb35-0573-47a0-850c-34c603257814.jpg" class="w-full h-full object-contain"></div>
+                        <div class="w-1/4 h-full flex items-center justify-center bg-[#0d1117] flex-shrink-0"><img src="https://cdn.phototourl.com/anon/2026-11-15-965149b4-d197-44fc-9814-b8c7a5fef991.jpg" class="w-full h-full object-contain"></div>
+                        <div class="w-1/4 h-full flex items-center justify-center bg-[#0d1117] flex-shrink-0"><img src="https://cdn.phototourl.com/anon/2026-11-15-960d5669-10c5-4340-a4b8-63f84f4644e5.jpg" class="w-full h-full object-contain"></div>
+                    </div>
+                    <div class="absolute bottom-2.5 left-0 w-full flex justify-center space-x-1.5 z-20 pointer-events-none">
+                        <div class="carousel-indicator active w-1.5 h-1.5 rounded-full bg-gray-500 transition-all"></div>
+                        <div class="carousel-indicator w-1.5 h-1.5 rounded-full bg-gray-500 transition-all"></div>
+                        <div class="carousel-indicator w-1.5 h-1.5 rounded-full bg-gray-500 transition-all"></div>
+                        <div class="carousel-indicator w-1.5 h-1.5 rounded-full bg-gray-500 transition-all"></div>
+                    </div>
+                </div>
+
+                <div class="px-3.5 py-4 space-y-6">
+                    <!-- 推荐项目 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-base border-l-4 border-[#26a8d6] pl-2.5 text-white tracking-wide">推荐</h3>
+                            <span class="text-xs text-gray-400 cursor-pointer hover:text-cyan-400 transition-colors" onclick="switchPage('games', document.querySelectorAll('.nav-item')[1])">查看全部 <i class="fa-solid fa-chevron-right text-[9px]"></i></span>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2.5">
+                            <!-- 经典百家乐：点击触发跳转 -->
+                            <div class="flex flex-col items-center gap-1.5 cursor-pointer" onclick="openBaccaratGame()">
+                                <div class="w-full aspect-square rounded-2xl bg-[#141b26] overflow-hidden border border-[#2a3c54] shadow-lg flex items-center justify-center">
+                                    <img src="https://media.istockphoto.com/id/1270789835/photo/table-stands-in-casino-with-poker-chips-and-cards.jpg?s=612x612&w=0&k=20&c=lu0KDKX3fOK68YK55baxOhwikTP06fuzYGDcwjzcRQ0=" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-300">经典百家乐</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-full aspect-square rounded-2xl bg-[#141b26] overflow-hidden border border-[#4d2832] shadow-lg flex items-center justify-center">
+                                    <img src="https://i.etsystatic.com/56937826/r/il/136e48/6937195076/il_570xN.6937195076_h3dz.jpg" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-300">幸运飞艇</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-full aspect-square rounded-2xl bg-[#141b26] overflow-hidden border border-[#204d3e] shadow-lg flex items-center justify-center">
+                                    <img src="https://images.unsplash.com/photo-1653495167982-51e02ce225c8?q=80&w=1173&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-300">德州扑克</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-full aspect-square rounded-2xl bg-[#141b26] overflow-hidden border border-[#432a54] shadow-lg flex items-center justify-center">
+                                    <img src="https://plus.unsplash.com/premium_photo-1718169446625-37680c0a3a0a?q=80&w=1032&auto=format&fit=crop&ixlib=rb-4.1.0&ixid=M3wxMjA3fDB8MHxwaG90by1wYWdlfHx8fGVufDB8fHx8fA%3D%3D" class="w-full h-full object-cover">
+                                </div>
+                                <span class="text-[11px] font-medium text-gray-300">疯狂刮刮乐</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 热门棋牌推荐 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-base border-l-4 border-[#26a8d6] pl-2.5 text-white tracking-wide">热门棋牌推荐</h3>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2.5">
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">龙虎斗</div><div class="text-[9px] text-cyan-400 mt-0.5">火爆进行中</div></div>
+                                <i class="fa-solid fa-chess-king text-cyan-400/80 text-xl"></i>
+                            </div>
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">抢庄牛牛</div><div class="text-[9px] text-gray-400 mt-0.5">百人同桌</div></div>
+                                <i class="fa-solid fa-shield-halved text-blue-400/80 text-xl"></i>
+                            </div>
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">炸金花</div><div class="text-[9px] text-gray-400 mt-0.5">经典玩法</div></div>
+                                <i class="fa-solid fa-clover text-emerald-400/80 text-xl"></i>
+                            </div>
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">广东麻将</div><div class="text-[9px] text-gray-400 mt-0.5">原汁原味</div></div>
+                                <i class="fa-solid fa-dice-five text-teal-400/80 text-xl"></i>
+                            </div>
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">斗地主</div><div class="text-[9px] text-gray-400 mt-0.5">全民娱乐</div></div>
+                                <i class="fa-solid fa-hat-wizard text-indigo-400/80 text-xl"></i>
+                            </div>
+                            <div class="game-tile p-3 flex items-center justify-between">
+                                <div><div class="text-xs font-bold text-gray-100">21点</div><div class="text-[9px] text-gray-400 mt-0.5">高赔率</div></div>
+                                <i class="fa-solid fa-layer-group text-slate-400/80 text-xl"></i>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 彩票专区 -->
+                    <div>
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-base border-l-4 border-[#26a8d6] pl-2.5 text-white tracking-wide">ACE CLUB 彩票 <span class="text-xs font-normal text-gray-400 ml-1">热门彩种</span></h3>
+                        </div>
+                        <div class="grid grid-cols-4 gap-2.5">
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#3b1c22] to-[#1c0d10] border border-[#6b2c39] flex items-center justify-center font-bold text-xs text-[#ff6b75] shadow-md">时时</div>
+                                <span class="text-[11px] font-medium text-gray-300">极速时时彩</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#1c2c3d] to-[#0c141f] border border-[#2d4d6e] flex items-center justify-center font-bold text-xs text-[#52adff] shadow-md">六合</div>
+                                <span class="text-[11px] font-medium text-gray-300">极速六合彩</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#163a2b] to-[#091a13] border border-[#276e52] flex items-center justify-center font-bold text-xs text-[#3ee3ab] shadow-md">赛车</div>
+                                <span class="text-[11px] font-medium text-gray-300">极速赛车</span>
+                            </div>
+                            <div class="flex flex-col items-center gap-1.5">
+                                <div class="w-13 h-13 rounded-2xl bg-gradient-to-br from-[#3d331c] to-[#1a150a] border border-[#6e5a2d] flex items-center justify-center font-bold text-xs text-[#ffd24d] shadow-md">幸运</div>
+                                <span class="text-[11px] font-medium text-gray-300">幸运飞艇</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- 特色娱乐 -->
+                    <div class="pb-6">
+                        <div class="flex justify-between items-center mb-3">
+                            <h3 class="font-bold text-base border-l-4 border-[#26a8d6] pl-2.5 text-white tracking-wide">特色娱乐</h3>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2.5">
+                            <div class="h-22 rounded-2xl bg-gradient-to-br from-[#152a42] via-[#0e1b2b] to-[#080e17] p-3 flex flex-col justify-between relative overflow-hidden border border-[#233c5c] shadow-lg">
+                                <div>
+                                    <div class="font-bold text-xs text-gray-100">捕鱼达人</div>
+                                    <div class="text-[10px] text-cyan-400 mt-0.5">万炮齐发</div>
+                                </div>
+                                <i class="fa-solid fa-fish text-4xl absolute -bottom-1 -right-1 text-cyan-400/20"></i>
+                            </div>
+                            <div class="h-22 rounded-2xl bg-gradient-to-br from-[#241a3a] via-[#150f24] to-[#0a0712] p-3 flex flex-col justify-between relative overflow-hidden border border-[#3b285c] shadow-lg">
+                                <div>
+                                    <div class="font-bold text-xs text-gray-100">哈希世界</div>
+                                    <div class="text-[10px] text-purple-400 mt-0.5">公平公正</div>
+                                </div>
+                                <i class="fa-solid fa-link text-4xl absolute -bottom-1 -right-1 text-purple-400/20"></i>
+                            </div>
+                            <div class="h-22 rounded-2xl bg-gradient-to-br from-[#38261c] via-[#21150f] to-[#120a07] p-3 flex flex-col justify-between relative overflow-hidden border border-[#593b2a] shadow-lg">
+                                <div>
+                                    <div class="font-bold text-xs text-gray-100">刮刮乐</div>
+                                    <div class="text-[10px] text-amber-400 mt-0.5">即开即中</div>
+                                </div>
+                                <i class="fa-solid fa-ticket text-4xl absolute -bottom-1 -right-1 text-amber-400/20"></i>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 游戏区 -->
+            <div id="page-games" class="page-content h-full">
+                <div class="flex h-full">
+                    <div class="w-22 bg-[#0d1117] h-full overflow-y-auto flex flex-col border-r border-[#1e2d42] flex-shrink-0 py-2">
+                        <div class="game-nav-item active py-5 text-center text-xs cursor-pointer" onclick="switchGameCategory('venues', this)">收藏/场馆</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('live', this)">真人</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('board', this)">棋牌</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('lottery', this)">彩票</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('fishing', this)">捕鱼</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('hash', this)">哈希</div>
+                        <div class="game-nav-item py-5 text-center text-xs cursor-pointer text-gray-400" onclick="switchGameCategory('scratch', this)">刮刮乐</div>
+                    </div>
+                    <div class="flex-1 p-3 overflow-y-auto h-full" id="gameContentArea"></div>
+                </div>
+            </div>
+
+            <!-- 优惠区 -->
+            <div id="page-promotions" class="page-content px-3.5 pt-3 space-y-4">
+                <h2 class="text-xl font-bold mb-2 border-l-4 border-[#26a8d6] pl-2.5 text-white">精彩优惠</h2>
+                
+                <div class="luxury-card overflow-hidden">
+                    <div class="w-full bg-[#0d1117] flex items-center justify-center">
+                        <img src="https://cdn.phototourl.com/anon/2026-11-15-683170e7-b6fd-45ed-8f54-1ad4531d1aad.jpg" class="w-full aspect-[2.1/1] object-contain">
+                    </div>
+                    <div class="p-3.5 bg-[#0d1117] border-t border-[#1e2d42]">
+                        <div class="text-white font-bold text-sm">ACE CLUB 首存送 100%</div>
+                        <div class="text-gray-400 text-xs mt-0.5">长期有效，海量福利等您来拿</div>
+                    </div>
+                </div>
+
+                <div class="luxury-card overflow-hidden">
+                    <div class="w-full bg-[#0d1117] flex items-center justify-center">
+                        <img src="https://cdn.phototourl.com/anon/2026-11-15-3ec4fb35-0573-47a0-850c-34c603257814.jpg" class="w-full aspect-[2.1/1] object-contain">
+                    </div>
+                    <div class="p-3.5 bg-[#0d1117] border-t border-[#1e2d42]">
+                        <div class="text-white font-bold text-sm">每日签到领彩金</div>
+                        <div class="text-gray-400 text-xs mt-0.5">最高可领 888 元</div>
+                    </div>
+                </div>
+
+                <div class="luxury-card overflow-hidden">
+                    <div class="w-full bg-[#0d1117] flex items-center justify-center">
+                        <img src="https://cdn.phototourl.com/anon/2026-11-15-965149b4-d197-44fc-9814-b8c7a5fef991.jpg" class="w-full aspect-[2.1/1] object-contain">
+                    </div>
+                    <div class="p-3.5 bg-[#0d1117] border-t border-[#1e2d42]">
+                        <div class="text-white font-bold text-sm">周末狂欢夜 赢取大奖</div>
+                        <div class="text-gray-400 text-xs mt-0.5">仅限本周末，奖池翻倍</div>
+                    </div>
+                </div>
+
+                <div class="luxury-card overflow-hidden">
+                    <div class="w-full bg-[#0d1117] flex items-center justify-center">
+                        <img src="https://cdn.phototourl.com/anon/2026-11-15-960d5669-10c5-4340-a4b8-63f84f4644e5.jpg" class="w-full aspect-[2.1/1] object-contain">
+                    </div>
+                    <div class="p-3.5 bg-[#0d1117] border-t border-[#1e2d42]">
+                        <div class="text-white font-bold text-sm">VIP 专属加码特权</div>
+                        <div class="text-gray-400 text-xs mt-0.5">尊享高额返水无上限</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 教程区 -->
+            <div id="page-tutorial" class="page-content pt-2">
+                <div class="p-3.5">
+                    <div class="luxury-card p-4 flex items-center justify-between relative overflow-hidden bg-gradient-to-r from-[#121c2b] to-[#0d1117]">
+                        <div class="z-10 flex-1">
+                            <div class="inline-flex items-center gap-1.5 px-2.5 py-0.5 rounded-full bg-cyan-500/10 border border-cyan-500/30 text-[10px] text-cyan-400 font-semibold mb-2">
+                                <span class="w-1.5 h-1.5 rounded-full bg-cyan-400 animate-pulse"></span> 7x24小时 在线服务
+                            </div>
+                            <h2 class="text-xl font-bold text-white mb-1">ACE CLUB 客服中心</h2>
+                            <p class="text-xs text-gray-400 mb-3.5">AI 智能解答与 1对1 专属专线</p>
+                            <button class="bg-gradient-to-r from-[#1d7af2] to-[#26a8d6] text-white px-5 py-1.5 rounded-full text-xs font-bold shadow-md shadow-cyan-500/20">立即咨询</button>
+                        </div>
+                        <div class="relative w-20 h-20 rounded-2xl overflow-hidden border border-[#26a8d6]/40 shadow-lg flex-shrink-0">
+                            <img src="https://cdn.phototourl.com/anon/2026-11-15-81b0445a-1e57-428d-be09-0e4e723aa352.png" class="w-full h-full object-cover">
+                        </div>
+                    </div>
+                </div>
+
+                <div class="px-3.5 py-2">
+                    <h3 class="text-sm font-bold mb-3 text-white">常见问题与指南</h3>
+                    <div class="space-y-3">
+                        <div class="flex items-center bg-[#141b26] p-3.5 rounded-2xl border border-[#1e2d42]">
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-cyan-400 text-base mr-3 border border-blue-500/30"><i class="fa-solid fa-gamepad"></i></div>
+                            <div class="flex-1">
+                                <div class="font-bold text-xs text-white">游戏介绍</div>
+                                <div class="text-[10px] text-gray-400">各类型游戏及彩票多种玩法</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center bg-[#141b26] p-3.5 rounded-2xl border border-[#1e2d42]">
+                            <div class="w-9 h-9 rounded-xl bg-cyan-500/15 flex items-center justify-center text-cyan-400 text-base mr-3 border border-cyan-500/30"><i class="fa-solid fa-screwdriver-wrench"></i></div>
+                            <div class="flex-1">
+                                <div class="font-bold text-xs text-white">技术支持</div>
+                                <div class="text-[10px] text-gray-400">提供全面技术支持保障安全</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center bg-[#141b26] p-3.5 rounded-2xl border border-[#1e2d42]">
+                            <div class="w-9 h-9 rounded-xl bg-blue-500/15 flex items-center justify-center text-blue-400 text-base mr-3 border border-blue-500/30"><i class="fa-solid fa-headset"></i></div>
+                            <div class="flex-1">
+                                <div class="font-bold text-xs text-white">联系我们</div>
+                                <div class="text-[10px] text-gray-400">为您提供全天候服务</div>
+                            </div>
+                            <i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 我的页面 -->
+            <div id="page-my" class="page-content pt-2">
+                <!-- 修复：“我的”页面顶部的深色个人信息栏 -->
+                <div class="bg-[#07090c] pt-2 pb-4 px-4 border-b border-[#1e2d42]">
+                    <div class="flex items-center justify-between">
+                        <div class="flex items-center">
+                            <div class="w-14 h-14 rounded-full border-2 border-[#26a8d6] overflow-hidden bg-[#141b26] flex items-center justify-center shadow-[0_0_12px_rgba(38,168,214,0.3)]">
+                                <i class="fa-solid fa-user text-2xl text-cyan-400"></i>
+                            </div>
+                            <div class="ml-3">
+                                <div class="text-base font-bold text-white flex items-center gap-1.5">
+                                    ACE_user88
+                                    <span class="text-[9px] bg-blue-500/20 text-cyan-400 px-2 py-0.5 rounded-full border border-blue-500/30 font-semibold">VIP 3</span>
+                                </div>
+                                <div class="text-xs text-gray-400 mt-1">ID: 88392019</div>
+                            </div>
+                        </div>
+                        <i class="fa-solid fa-gear text-xl text-gray-400 hover:text-white transition-colors cursor-pointer"></i>
+                    </div>
+                </div>
+
+                <div class="px-3.5 py-3.5 space-y-3.5">
+                    <div class="wallet-card p-4">
+                        <div class="flex justify-between items-center border-b border-white/10 pb-2.5 mb-2.5">
+                            <div class="flex items-center font-bold text-white text-xs"><i class="fa-solid fa-wallet text-cyan-400 mr-1.5"></i>中心钱包</div>
+                            <div class="text-[10px] text-cyan-300">VIP 详情 <i class="fa-solid fa-chevron-right text-[8px]"></i></div>
+                        </div>
+                        <div class="text-[10px] text-gray-300">总余额 (USDT)</div>
+                        <div class="text-2xl font-extrabold text-white mt-0.5 font-mono">268.50</div>
+                        <div class="text-[10px] mt-0.5 text-gray-300">今日收益: <span class="text-emerald-400 font-bold">+12.80</span></div>
+                        
+                        <div class="grid grid-cols-3 gap-2.5 mt-3.5">
+                            <button class="bg-[#07090c]/80 text-cyan-400 py-2 rounded-xl text-xs font-bold border border-[#1e2d42]">存款</button>
+                            <button class="bg-[#07090c]/80 text-cyan-400 py-2 rounded-xl text-xs font-bold border border-[#1e2d42]">取款</button>
+                            <button class="bg-[#07090c]/80 text-cyan-400 py-2 rounded-xl text-xs font-bold border border-[#1e2d42]">转账</button>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#141b26] rounded-2xl overflow-hidden border border-[#1e2d42]">
+                        <div class="flex items-center justify-between p-3.5 border-b border-[#1e2d42] active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-solid fa-file-invoice text-cyan-400 w-5 text-center mr-2"></i>投注记录</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-3.5 border-b border-[#1e2d42] active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-solid fa-chart-line text-cyan-400 w-5 text-center mr-2"></i>额度变动</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-3.5 border-b border-[#1e2d42] active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-solid fa-money-bill-transfer text-cyan-400 w-5 text-center mr-2"></i>存取款记录</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-3.5 active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-regular fa-credit-card text-cyan-400 w-5 text-center mr-2"></i>收款账户</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                    </div>
+
+                    <div class="bg-[#141b26] rounded-2xl overflow-hidden border border-[#1e2d42]">
+                        <div class="flex items-center justify-between p-3.5 border-b border-[#1e2d42] active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-solid fa-arrows-rotate text-cyan-400 w-5 text-center mr-2"></i>切换账号</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-3.5 border-b border-[#1e2d42] active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-regular fa-circle-question text-cyan-400 w-5 text-center mr-2"></i>帮助中心</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                        <div class="flex items-center justify-between p-3.5 active:bg-[#0d1117]">
+                            <div class="text-xs text-gray-200"><i class="fa-solid fa-handshake-angle text-cyan-400 w-5 text-center mr-2"></i>申请代理</div><i class="fa-solid fa-chevron-right text-gray-600 text-xs"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </main>
+
+        <!-- 底部 Tab 导航栏 -->
+        <nav class="absolute bottom-0 left-0 right-0 h-[60px] bg-[#0d1117]/95 backdrop-blur-xl border-t border-[#1e2d42] flex justify-around items-center z-50 pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.6)]">
+            <div class="nav-item active flex flex-col items-center justify-center w-full h-full cursor-pointer text-gray-500" onclick="switchPage('home', this)">
+                <i class="fa-solid fa-house text-base mb-0.5"></i><span class="text-[10px]">首页</span>
+            </div>
+            <div class="nav-item flex flex-col items-center justify-center w-full h-full cursor-pointer text-gray-500" onclick="switchPage('games', this)">
+                <i class="fa-solid fa-gamepad text-base mb-0.5"></i><span class="text-[10px]">游戏</span>
+            </div>
+            <div class="nav-item flex flex-col items-center justify-center w-full h-full cursor-pointer text-gray-500" onclick="switchPage('promotions', this)">
+                <i class="fa-solid fa-tags text-base mb-0.5"></i><span class="text-[10px]">优惠</span>
+            </div>
+            <div class="nav-item flex flex-col items-center justify-center w-full h-full cursor-pointer text-gray-500" onclick="switchPage('tutorial', this)">
+                <i class="fa-solid fa-book-open text-base mb-0.5"></i><span class="text-[10px]">教程</span>
+            </div>
+            <div class="nav-item flex flex-col items-center justify-center w-full h-full cursor-pointer text-gray-500" onclick="switchPage('my', this)">
+                <i class="fa-solid fa-user text-base mb-0.5"></i><span class="text-[10px]">我的</span>
+            </div>
+        </nav>
+
+        <!-- ==================== 百家乐游戏叠加层 ==================== -->
+        <div id="baccaratOverlay" class="baccarat-layer">
+            
+            <div id="bac-loader" class="absolute inset-0 bg-[#090c12] z-[10000] flex flex-col items-center justify-center transition-opacity duration-300 hidden">
+                <div class="w-10 h-10 border-4 border-[#2eb4e6] border-t-transparent rounded-full animate-spin mb-4"></div>
+                <div class="text-[#2eb4e6] text-[11px] font-bold tracking-widest font-mono uppercase">Connecting to Live Server...</div>
+            </div>
+
+            <!-- 顶部栏 -->
+            <header class="bac-top-app-bar">
+                <div class="flex items-center gap-2 cursor-pointer" onclick="closeBaccaratGame()" title="退出遊戲">
+                    <i class="fa-solid fa-chevron-left text-gray-400 text-lg hover:text-white transition-colors px-1"></i>
+                    
+                    <!-- 修复：完美统一 ACE CLUB 字体样式 -->
+                    <div class="text-[#26a8d6] font-extrabold text-base tracking-wider flex items-center gap-1.5" style="cursor: default;">
+                        <div class="bac-brand-dot"></div>
+                        ACE CLUB
+                    </div>
+                </div>
+                <div class="bac-user-balance-box">
+                    <span class="bac-currency">USDT</span>
+                    <span class="bac-balance-val" id="bac-ui-balance">350.00</span>
+                </div>
+            </header>
+
+            <!-- 发牌视区 -->
+            <div class="bac-game-viewport">
+                <div class="bac-viewport-header">
+                    <span>VIP BACCARAT 01</span>
+                    <div class="bac-live-badge"><div class="bac-live-dot"></div>LIVE 1080P</div>
+                </div>
+
+                <div class="bac-table-ring"><span class="bac-table-watermark">TABLE #01</span></div>
+                <div class="bac-status-toast" id="bac-status-toast">請下注</div>
+
+                <div class="bac-cards-display">
+                    <div class="bac-side-box">
+                        <span class="bac-side-name bac-p-color">閒 PLAYER</span>
+                        <div class="bac-card-slot" id="bac-p-cards"></div>
+                        <div class="bac-score-badge" id="bac-p-score">0</div>
+                    </div>
+                    <div class="bac-side-box">
+                        <span class="bac-side-name bac-b-color">莊 BANKER</span>
+                        <div class="bac-card-slot" id="bac-b-cards"></div>
+                        <div class="bac-score-badge" id="bac-b-score">0</div>
+                    </div>
+                </div>
+
+                <!-- 倒计时 -->
+                <div class="bac-timer-circle">
+                    <span class="bac-timer-num" id="bac-timer-num">12</span>
+                    <span class="bac-timer-lbl">秒下注</span>
+                </div>
+            </div>
+
+            <!-- 珠盘路单 -->
+            <div class="bac-roadmap-container">
+                <div class="bac-roadmap-grid" id="bac-roadmap"></div>
+            </div>
+
+            <!-- 下注面板 -->
+            <div class="bac-bet-board">
+                <div class="bac-bet-zone bac-zone-P" onclick="bacPlaceBet('P')"><span class="bac-z-title">閒 PLAYER</span><span class="bac-z-odds">1:1</span><div class="bac-chip-on-board" id="bac-chip-P">0</div></div>
+                <div class="bac-bet-zone bac-zone-T" onclick="bacPlaceBet('T')"><span class="bac-z-title">和 TIE</span><span class="bac-z-odds">1:8</span><div class="bac-chip-on-board" id="bac-chip-T">0</div></div>
+                <div class="bac-bet-zone bac-zone-B" onclick="bacPlaceBet('B')"><span class="bac-z-title">莊 BANKER</span><span class="bac-z-odds">1:0.95</span><div class="bac-chip-on-board" id="bac-chip-B">0</div></div>
+                <div class="bac-bet-zone bac-zone-PP" onclick="bacPlaceBet('PP')"><span class="bac-z-title">閒對</span><span class="bac-z-odds">1:11</span><div class="bac-chip-on-board" id="bac-chip-PP">0</div></div>
+                <div class="bac-bet-zone bac-zone-BP" onclick="bacPlaceBet('BP')"><span class="bac-z-title">莊對</span><span class="bac-z-odds">1:11</span><div class="bac-chip-on-board" id="bac-chip-BP">0</div></div>
+            </div>
+
+            <!-- 控制台 -->
+            <footer class="bac-controls-bar">
+                <div class="bac-chips-row">
+                    <div class="bac-chip-item bac-cp-10 active" onclick="bacSelectChip(10, this)">10</div>
+                    <div class="bac-chip-item bac-cp-50" onclick="bacSelectChip(50, this)">50</div>
+                    <div class="bac-chip-item bac-cp-100" onclick="bacSelectChip(100, this)">100</div>
+                    <div class="bac-chip-item bac-cp-500" onclick="bacSelectChip(500, this)">500</div>
+                    <div class="bac-chip-item bac-cp-all" onclick="bacSelectChip('ALL', this)">ALL IN</div>
+                </div>
+                <div class="bac-action-row">
+                    <button class="bac-act-btn bac-btn-reset" id="bac-btn-clear" onclick="bacClearBets()">取消 (0)</button>
+                    <button class="bac-act-btn bac-btn-confirm" id="bac-btn-confirm" onclick="bacConfirmBets()">確認下注</button>
+                </div>
+            </footer>
+        </div>
+
+    </div>
+
+    <!-- ==================== 逻辑代码区 ==================== -->
+    <script>
+        // --- 1. ACE CLUB 基础逻辑 ---
+        let currentSlide = 0;
+        const carouselTrack = document.getElementById('carouselTrack');
+        const indicators = document.querySelectorAll('.carousel-indicator');
+        setInterval(() => {
+            if(!carouselTrack) return;
+            indicators[currentSlide].classList.remove('active');
+            currentSlide = (currentSlide + 1) % indicators.length;
+            carouselTrack.style.transform = `translateX(-${currentSlide * 25}%)`;
+            indicators[currentSlide].classList.add('active');
+        }, 3200);
+
+        function switchPage(pageId, navElement) {
+            document.querySelectorAll('.page-content').forEach(page => page.classList.remove('active'));
+            document.querySelectorAll('.nav-item').forEach(item => { item.classList.remove('active'); item.classList.add('text-gray-500'); });
+            
+            document.getElementById('page-' + pageId).classList.add('active');
+            
+            if (navElement) { navElement.classList.add('active'); navElement.classList.remove('text-gray-500'); }
+            document.getElementById('mainContainer').scrollTop = 0;
+
+            const topBar = document.getElementById('globalTopBar');
+            
+            // 修改：确保“我的”页面依然显示搜索栏，只保留实底色
+            if (pageId === 'home') { 
+                topBar.classList.remove('top-bar-solid'); topBar.classList.add('top-bar'); 
+            } else { 
+                topBar.classList.add('top-bar-solid'); topBar.classList.remove('top-bar'); 
+            }
+
+            if(pageId === 'games' && document.getElementById('gameContentArea').innerHTML.trim() === "") {
+                switchGameCategory('live', document.querySelectorAll('.game-nav-item')[1]);
+            }
+        }
+
+        document.getElementById('mainContainer').addEventListener('scroll', (e) => {
+            const topBar = document.getElementById('globalTopBar');
+            const activePage = document.querySelector('.page-content.active')?.id;
+            if(activePage === 'page-home') {
+                if (e.target.scrollTop > 20) { topBar.classList.add('top-bar-solid'); topBar.classList.remove('top-bar'); } 
+                else { topBar.classList.remove('top-bar-solid'); topBar.classList.add('top-bar'); }
+            }
+        });
+
+        // ==================== 2. 点击进入百家乐跳转逻辑 ====================
+        function openBaccaratGame() {
+            const overlay = document.getElementById('baccaratOverlay');
+            const loader = document.getElementById('bac-loader');
+            
+            overlay.classList.add('show');
+            loader.style.display = 'flex';
+            loader.style.opacity = '1';
+            
+            setTimeout(() => {
+                loader.style.opacity = '0';
+                setTimeout(() => {
+                    loader.style.display = 'none';
+                    bacInit(); 
+                }, 300);
+            }, 1500);
+        }
+
+        function closeBaccaratGame() {
+            document.getElementById('baccaratOverlay').classList.remove('show');
+            clearInterval(bacTimerInterval); 
+        }
+
+        const gameData = {
+            'live': [
+                { name: '经典百家乐', desc: '性感荷官 · 实时互动', icon: 'fa-gem', tag: 'HOT', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300', click: 'openBaccaratGame()' },
+                { name: '龙虎斗', desc: '急速开牌 · 1秒比牌', icon: 'fa-chess-knight', tag: '推荐', theme: 'from-rose-500/20 to-red-600/20 border-rose-500/40 text-rose-300' },
+                { name: '极速轮盘', desc: '欧洲经典 · 翻倍爆奖', icon: 'fa-circle-notch', tag: '高赔', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '骰宝', desc: '猜大小骰 · 玩法丰富', icon: 'fa-dice', tag: '好运', theme: 'from-purple-500/20 to-pink-600/20 border-purple-500/40 text-purple-300' },
+                { name: '牛牛', desc: '激情对战 · 豪赚不停', icon: 'fa-shield-halved', tag: '火爆', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: '炸金花', desc: '心理博弈 · 赢在智慧', icon: 'fa-clover', tag: '经典', theme: 'from-blue-500/20 to-indigo-600/20 border-blue-500/40 text-blue-300' },
+                { name: '色碟', desc: '经典越南 · 极速开奖', icon: 'fa-box', tag: '经典', theme: 'from-orange-500/20 to-amber-600/20 border-orange-500/40 text-orange-300' },
+                { name: '番摊', desc: '传统玩法 · 简单易懂', icon: 'fa-cubes', tag: '热销', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' }
+            ],
+            'venues': [
+                { name: 'ACE CLUB 主场馆', desc: '官方推荐 · 尊享加码', icon: 'fa-building', tag: '首选', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: 'AG 视讯厅', desc: '顶级画质 · 经典品牌', icon: 'fa-video', tag: '热门', theme: 'from-amber-500/20 to-orange-600/20 border-amber-500/40 text-amber-300' },
+                { name: 'BG 棋牌馆', desc: '万人同台 · 实时竞技', icon: 'fa-chess-board', tag: '爆款', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: 'VR 彩票馆', desc: '极速开奖 · 高额赔率', icon: 'fa-ticket', tag: '秒开', theme: 'from-purple-500/20 to-indigo-600/20 border-purple-500/40 text-purple-300' },
+                { name: 'CQ9 捕鱼馆', desc: '千倍爆率 · 万炮齐发', icon: 'fa-fish', tag: '高赔', theme: 'from-blue-500/20 to-cyan-600/20 border-blue-500/40 text-blue-300' },
+                { name: '区块链哈希馆', desc: '公平透明 · 链上验证', icon: 'fa-link', tag: '公正', theme: 'from-violet-500/20 to-fuchsia-600/20 border-violet-500/40 text-violet-300' },
+                { name: 'PG 电子馆', desc: '爆奖不停 · 炫酷特效', icon: 'fa-gamepad', tag: '高爆', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300' },
+                { name: 'JDB 捕鱼馆', desc: '千倍大奖 · 达人必玩', icon: 'fa-compass', tag: '推荐', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' }
+            ],
+            'board': [
+                { name: '抢庄牛牛', desc: '百人同桌 · 拼手速抢庄', icon: 'fa-shield-halved', tag: '火爆', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: '广东麻将', desc: '原汁原味 · 血战到底', icon: 'fa-dice-five', tag: '地道', theme: 'from-teal-500/20 to-green-600/20 border-teal-500/40 text-teal-300' },
+                { name: '德州扑克', desc: '全压对决 · 高手过招', icon: 'fa-diamond', tag: '高奖', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '斗地主', desc: '全民娱乐 · 炸弹翻倍', icon: 'fa-hat-wizard', tag: '热门', theme: 'from-amber-500/20 to-orange-600/20 border-amber-500/40 text-amber-300' },
+                { name: '21点', desc: '算牌比拼 · 决战黑杰克', icon: 'fa-layer-group', tag: '高智', theme: 'from-indigo-500/20 to-purple-600/20 border-indigo-500/40 text-indigo-300' },
+                { name: '三公', desc: '简单刺激 · 开牌即赢', icon: 'fa-coins', tag: '快节奏', theme: 'from-yellow-500/20 to-amber-600/20 border-yellow-500/40 text-yellow-300' },
+                { name: '十三水', desc: '理牌技巧 · 智力较量', icon: 'fa-layer-group', tag: '竞技', theme: 'from-blue-500/20 to-indigo-600/20 border-blue-500/40 text-blue-300' },
+                { name: '跑得快', desc: '节奏明快 · 爽快对决', icon: 'fa-bolt', tag: '极速', theme: 'from-red-500/20 to-rose-600/20 border-red-500/40 text-rose-300' }
+            ],
+            'lottery': [
+                { name: '极速时时彩', desc: '75秒一期 · 随时中奖', icon: 'fa-stopwatch', tag: '秒开', theme: 'from-rose-500/20 to-pink-600/20 border-rose-500/40 text-rose-300' },
+                { name: '极速赛车', desc: '激情狂飙 · 冠军预测', icon: 'fa-car-side', tag: '高频', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: '澳洲幸运5', desc: '官方同步 · 公平公正', icon: 'fa-clover', tag: '官方', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '六合彩', desc: '传统经典 · 特码高倍', icon: 'fa-globe', tag: '高特', theme: 'from-purple-500/20 to-indigo-600/20 border-purple-500/40 text-purple-300' },
+                { name: '北京快乐8', desc: '多重组合 · 轻松中奖', icon: 'fa-circle-nodes', tag: '易中', theme: 'from-blue-500/20 to-cyan-600/20 border-blue-500/40 text-blue-300' },
+                { name: '幸运飞艇', desc: '全网热搜 · 冠军连斩', icon: 'fa-paper-plane', tag: '人气', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300' },
+                { name: '台湾宾果', desc: '5分钟开 · 玩法多样', icon: 'fa-bowling-ball', tag: '好运', theme: 'from-green-500/20 to-emerald-600/20 border-green-500/40 text-green-300' },
+                { name: '快乐十分', desc: '高频开奖 · 幸运连连', icon: 'fa-star', tag: '热门', theme: 'from-yellow-500/20 to-amber-600/20 border-yellow-500/40 text-yellow-300' }
+            ],
+            'fishing': [
+                { name: '捕鱼达人', desc: '爆率99% · 万炮轰炸', icon: 'fa-fish-fins', tag: '爆率99%', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '海神争霸', desc: '击杀Boss · 豪赢金币', icon: 'fa-water', tag: '巨奖', theme: 'from-blue-500/20 to-teal-600/20 border-blue-500/40 text-teal-300' },
+                { name: '欢乐捕鱼', desc: '休闲爽玩 · 画面精美', icon: 'fa-fish', tag: '万炮', theme: 'from-teal-500/20 to-emerald-600/20 border-teal-500/40 text-emerald-300' },
+                { name: '龙王传', desc: '千倍龙王 · 一炮暴富', icon: 'fa-dragon', tag: '千倍', theme: 'from-purple-500/20 to-violet-600/20 border-purple-500/40 text-violet-300' },
+                { name: '深海寻宝', desc: '满屏掉落 · 财源滚滚', icon: 'fa-gem', tag: '金币', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300' },
+                { name: '疯狂射击', desc: '炮台升级 · 爽快射速', icon: 'fa-crosshairs', tag: '爽快', theme: 'from-rose-500/20 to-red-600/20 border-rose-500/40 text-rose-300' },
+                { name: '美人鱼捕鱼', desc: '梦幻深海 · 宝藏狂发', icon: 'fa-water', tag: '梦幻', theme: 'from-pink-500/20 to-rose-600/20 border-pink-500/40 text-pink-300' },
+                { name: '三仙捕鱼', desc: '神仙显灵 · 财源广进', icon: 'fa-wand-magic-sparkles', tag: '爆金', theme: 'from-purple-500/20 to-indigo-600/20 border-purple-500/40 text-indigo-300' }
+            ],
+            'hash': [
+                { name: '哈希牛牛', desc: '区块链开奖 · 0时差', icon: 'fa-link', tag: '0时差', theme: 'from-violet-500/20 to-indigo-600/20 border-violet-500/40 text-violet-300' },
+                { name: '哈希单双', desc: '绝对公正 · 无法篡改', icon: 'fa-scale-balanced', tag: '防作弊', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '哈希大小', desc: '透明验证 · 秒级结算', icon: 'fa-arrow-up-right-dots', tag: '透明', theme: 'from-indigo-500/20 to-purple-600/20 border-indigo-500/40 text-indigo-300' },
+                { name: '哈希赛车', desc: '链上飙车 · 速度激情', icon: 'fa-car-burst', tag: '即开', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: '哈希时时彩', desc: '极速验链 · 玩法创新', icon: 'fa-clock', tag: '验链', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300' },
+                { name: '哈希百家乐', desc: '去中心化 · 原汁原味', icon: 'fa-chess-king', tag: 'Web3', theme: 'from-rose-500/20 to-pink-600/20 border-rose-500/40 text-rose-300' },
+                { name: '哈希幸运庄闲', desc: '链上即时 · 100% 透明', icon: 'fa-shield-cat', tag: '安全', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '幸运哈希', desc: '区块哈希 · 瞬间结清', icon: 'fa-cubes-stacked', tag: '秒结', theme: 'from-violet-500/20 to-purple-600/20 border-violet-500/40 text-violet-300' }
+            ],
+            'scratch': [
+                { name: '疯狂刮刮乐', desc: '即开即中 · 巨额大奖', icon: 'fa-ticket', tag: '巨奖', theme: 'from-amber-500/20 to-orange-600/20 border-amber-500/40 text-amber-300' },
+                { name: '发财树', desc: '摇钱挂彩 · 连续爆金', icon: 'fa-tree', tag: '摇钱', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' },
+                { name: '黄金满贯', desc: '最高100万 · 惊喜不断', icon: 'fa-sack-dollar', tag: '百万', theme: 'from-yellow-500/20 to-amber-600/20 border-yellow-500/40 text-yellow-300' },
+                { name: '宝石风暴', desc: '连消连送 · 奖励叠加', icon: 'fa-gem', tag: '连连消', theme: 'from-cyan-500/20 to-blue-600/20 border-cyan-500/40 text-cyan-300' },
+                { name: '尊享VIP卡', desc: '专属特权 · 独家彩金', icon: 'fa-credit-card', tag: '特权', theme: 'from-purple-500/20 to-pink-600/20 border-purple-500/40 text-purple-300' },
+                { name: '幸运秘境', desc: '胜率高达98% · 轻松赢', icon: 'fa-map', tag: '98%胜', theme: 'from-rose-500/20 to-red-600/20 border-rose-500/40 text-rose-300' },
+                { name: '超级777', desc: '经典Slot刮卡 · 777大奖', icon: 'fa-crown', tag: '大奖', theme: 'from-amber-500/20 to-yellow-600/20 border-amber-500/40 text-amber-300' },
+                { name: '幸运大转盘刮卡', desc: '双重奖励 · 刮出转盘', icon: 'fa-dharmachakra', tag: '双奖', theme: 'from-emerald-500/20 to-teal-600/20 border-emerald-500/40 text-emerald-300' }
+            ]
+        };
+
+        function switchGameCategory(categoryId, navElement) {
+            document.querySelectorAll('.game-nav-item').forEach(item => { item.classList.remove('active'); item.classList.add('text-gray-400'); });
+            navElement.classList.add('active'); navElement.classList.remove('text-gray-400');
+
+            const container = document.getElementById('gameContentArea');
+            let html = '<div class="grid grid-cols-2 gap-2.5 pb-8">';
+            const items = gameData[categoryId] || [];
+            
+            items.forEach(item => {
+                const clickAction = item.click ? `onclick="${item.click}"` : '';
+                html += `
+                    <div ${clickAction} class="relative bg-gradient-to-b from-[#141d2a] to-[#0c121c] rounded-2xl p-2.5 border border-[#1e2e42] hover:border-[#26a8d6]/50 transition-all duration-300 shadow-md flex flex-col items-center text-center group cursor-pointer overflow-hidden">
+                        <div class="absolute top-1.5 right-1.5 px-1.5 py-0.2 text-[8px] font-bold rounded-full bg-gradient-to-r ${item.theme} border shadow-sm">${item.tag}</div>
+                        <div class="w-11 h-11 rounded-2xl bg-gradient-to-br ${item.theme} flex items-center justify-center my-1 shadow-inner border group-hover:scale-105 transition-transform"><i class="fa-solid ${item.icon} text-lg"></i></div>
+                        <div class="text-xs font-bold text-gray-100 mt-1">${item.name}</div>
+                        <div class="text-[9px] text-gray-400/90 mt-0.5 line-clamp-1">${item.desc}</div>
+                        <div class="mt-2 w-full py-1 bg-[#080d14] rounded-xl text-[9px] text-cyan-400/90 font-medium flex items-center justify-center gap-1 border border-[#1a2536] group-hover:border-[#26a8d6]/40">
+                            进入游戏 <i class="fa-solid fa-play text-[7px] text-cyan-400"></i>
+                        </div>
+                    </div>`;
+            });
+            container.innerHTML = html + '</div>';
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            const defaultNav = document.querySelector('.game-nav-item');
+            if (defaultNav) switchGameCategory('venues', defaultNav);
+        });
+
+        // ==================== 3. 百家乐游戏核心逻辑 ====================
+        let bacBalance = 350.00;
+        let bacSelectedChip = 10;
+        let bacIsBettingPhase = true;
+        let bacBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 };
+        let bacConfirmedBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 };
+        let bacTimer = 12;
+        let bacTimerInterval;
+        const bacSuits = ['♠', '♥', '♣', '♦'];
+        const bacValues = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const bacHistoryData = [];
+
+        function bacInit() {
+            bacBalance = 350.00;
+            bacBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 };
+            bacConfirmedBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 };
+            bacUpdateBalanceUI();
+            bacInitRoadmap();
+            bacStartBettingPhase();
+        }
+
+        function bacShowToast(msg) {
+            const toast = document.getElementById('bac-status-toast');
+            toast.innerText = msg; toast.style.opacity = '1';
+            setTimeout(() => { toast.style.opacity = '0'; }, 1500);
+        }
+
+        function bacSelectChip(val, el) {
+            if(!bacIsBettingPhase) return;
+            bacSelectedChip = val === 'ALL' ? Math.floor(bacBalance) : val;
+            document.querySelectorAll('.bac-chip-item').forEach(b => b.classList.remove('active'));
+            el.classList.add('active');
+        }
+
+        function bacPlaceBet(type) {
+            if(!bacIsBettingPhase || bacSelectedChip <= 0 || bacSelectedChip > bacBalance) return;
+            bacBalance -= bacSelectedChip;
+            bacBets[type] += bacSelectedChip;
+            bacUpdateBalanceUI(); bacUpdateChipsUI();
+        }
+
+        function bacClearBets() {
+            if(!bacIsBettingPhase) return;
+            for(let k in bacBets) { bacBalance += (bacBets[k] - bacConfirmedBets[k]); bacBets[k] = bacConfirmedBets[k]; }
+            bacUpdateBalanceUI(); bacUpdateChipsUI();
+        }
+
+        function bacConfirmBets() {
+            if(!bacIsBettingPhase) return;
+            let hasBet = false;
+            for(let k in bacBets) { bacConfirmedBets[k] = bacBets[k]; if(bacBets[k] > 0) hasBet = true; }
+            if(hasBet) bacShowToast("下注成功");
+            bacUpdateBalanceUI();
+        }
+
+        function bacUpdateBalanceUI() {
+            document.getElementById('bac-ui-balance').innerText = bacBalance.toFixed(2);
+            let unconfirmed = 0; for(let k in bacBets) unconfirmed += (bacBets[k] - bacConfirmedBets[k]);
+            document.getElementById('bac-btn-clear').innerText = `取消 (${unconfirmed})`;
+        }
+
+        function bacUpdateChipsUI() {
+            for(let type in bacBets) {
+                const el = document.getElementById(`bac-chip-${type}`);
+                if(bacBets[type] > 0) { el.innerText = bacBets[type] >= 1000 ? (bacBets[type]/1000).toFixed(1)+'k' : bacBets[type]; el.classList.add('show'); } 
+                else { el.classList.remove('show'); }
+            }
+        }
+
+        function bacStartBettingPhase() {
+            bacIsBettingPhase = true; bacTimer = 12;
+            bacBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 }; bacConfirmedBets = { P: 0, B: 0, T: 0, PP: 0, BP: 0 };
+            bacUpdateChipsUI();
+            
+            document.querySelectorAll('.bac-bet-zone').forEach(z => z.classList.remove('winner'));
+            document.getElementById('bac-p-cards').innerHTML = ''; document.getElementById('bac-b-cards').innerHTML = '';
+            document.getElementById('bac-p-score').style.opacity = '0'; document.getElementById('bac-b-score').style.opacity = '0';
+            
+            bacShowToast("請下注");
+            document.getElementById('bac-btn-clear').disabled = false; document.getElementById('bac-btn-confirm').disabled = false;
+
+            clearInterval(bacTimerInterval);
+            document.getElementById('bac-timer-num').innerText = bacTimer;
+            bacTimerInterval = setInterval(() => {
+                bacTimer--; document.getElementById('bac-timer-num').innerText = bacTimer;
+                if(bacTimer <= 0) { clearInterval(bacTimerInterval); bacStartDealingPhase(); }
+            }, 1000);
+        }
+
+        function bacStartDealingPhase() {
+            bacIsBettingPhase = false;
+            document.getElementById('bac-btn-clear').disabled = true; document.getElementById('bac-btn-confirm').disabled = true;
+            bacShowToast("停止下注"); bacClearBets(); 
+            setTimeout(() => { bacDealCards(); }, 1200);
+        }
+
+        function bacDrawCard() {
+            const v = bacValues[Math.floor(Math.random() * bacValues.length)];
+            const s = bacSuits[Math.floor(Math.random() * bacSuits.length)];
+            let numValue = parseInt(v); if(v === 'A') numValue = 1; if(['10','J','Q','K'].includes(v)) numValue = 0;
+            return { valStr: v+s, num: numValue, isRed: (s==='♥'||s==='♦') };
+        }
+
+        function bacCreateCardDOM(cardObj, delay) {
+            const el = document.createElement('div');
+            el.className = `bac-poker-card ${cardObj.isRed ? 'bac-card-red' : 'bac-card-black'}`;
+            el.innerText = cardObj.valStr;
+            setTimeout(() => el.classList.add('active'), delay); return el;
+        }
+
+        function bacDealCards() {
+            const p1 = bacDrawCard(), p2 = bacDrawCard(), b1 = bacDrawCard(), b2 = bacDrawCard();
+            const pArea = document.getElementById('bac-p-cards'), bArea = document.getElementById('bac-b-cards');
+            pArea.appendChild(bacCreateCardDOM(p1, 100)); bArea.appendChild(bacCreateCardDOM(b1, 500));
+            pArea.appendChild(bacCreateCardDOM(p2, 900)); bArea.appendChild(bacCreateCardDOM(b2, 1300));
+
+            setTimeout(() => {
+                const pScore = (p1.num + p2.num) % 10; const bScore = (b1.num + b2.num) % 10;
+                document.getElementById('bac-p-score').innerText = pScore; document.getElementById('bac-b-score').innerText = bScore;
+                document.getElementById('bac-p-score').style.opacity = '1'; document.getElementById('bac-b-score').style.opacity = '1';
+                bacResolveOutcome(pScore, bScore);
+            }, 1800);
+        }
+
+        function bacResolveOutcome(pScore, bScore) {
+            let result = '';
+            if(pScore > bScore) result = 'P'; else if(bScore > pScore) result = 'B'; else result = 'T';
+            const winZone = document.querySelector(`.bac-zone-${result}`);
+            if(winZone) winZone.classList.add('winner');
+            
+            let winTotal = 0;
+            if(result === 'P' && bacConfirmedBets['P'] > 0) winTotal += bacConfirmedBets['P'] * 2;
+            if(result === 'B' && bacConfirmedBets['B'] > 0) winTotal += bacConfirmedBets['B'] * 1.95;
+            if(result === 'T' && bacConfirmedBets['T'] > 0) winTotal += bacConfirmedBets['T'] * 9;
+            if(result === 'T') { winTotal += bacConfirmedBets['P'] + bacConfirmedBets['B']; } 
+
+            if(winTotal > 0) { bacBalance += winTotal; bacShowToast(`贏得 +${winTotal.toFixed(2)}`); bacUpdateBalanceUI(); }
+            bacAddRoadmapDot(result);
+            setTimeout(() => { bacStartBettingPhase(); }, 3500);
+        }
+
+        function bacInitRoadmap() {
+            const sample = ['B','P','B','B','P','T','P','B','P','P','B','T','P','B','B'];
+            sample.forEach(r => bacAddRoadmapDot(r));
+        }
+
+        function bacAddRoadmapDot(res) {
+            bacHistoryData.push(res);
+            const grid = document.getElementById('bac-roadmap'); grid.innerHTML = '';
+            const labels = { 'B': '莊', 'P': '閒', 'T': '和' };
+            bacHistoryData.slice(-72).forEach(r => {
+                const cell = document.createElement('div'); cell.className = 'bac-road-cell';
+                const bead = document.createElement('div'); bead.className = `bac-bead bac-bead-${r}`; bead.innerText = labels[r];
+                cell.appendChild(bead); grid.appendChild(cell);
+            });
+            document.querySelector('.bac-roadmap-container').scrollLeft = 9999;
+        }
+    </script>
+</body>
+</html>
